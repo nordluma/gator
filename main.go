@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"os"
 
@@ -11,19 +9,6 @@ import (
 
 type state struct {
 	config *config.Config
-}
-
-func handlerLogin(s *state, cmd command) error {
-	if len(cmd.args) == 0 {
-		return errors.New("the `login` handler expects a single argument, the username")
-	}
-
-	user := cmd.args[0]
-	fmt.Printf("user: %s\n", user)
-	s.config.SetUser(user)
-	fmt.Printf("%s has been set as user\n", user)
-
-	return nil
 }
 
 func main() {
