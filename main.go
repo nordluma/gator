@@ -1,19 +1,29 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/nordluma/gator/internal/config"
+	"github.com/nordluma/gator/internal/database"
 )
 
 type state struct {
+	db     *database.Queries
 	config *config.Config
 }
 
 func main() {
 	cfg := config.Read()
-	s := state{config: &cfg}
+	db, err := sql.Open("postgres", cfg.DbUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
+	s := state{db: dbQueries, config: &cfg}
 
 	cmds := newCommands()
 	cmds.register("login", handlerLogin)
