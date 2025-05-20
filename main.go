@@ -26,6 +26,7 @@ func main() {
 	s := state{db: dbQueries, config: &cfg}
 
 	cmds := newCommands()
+	cmds.register("register", handlerRegister)
 	cmds.register("login", handlerLogin)
 
 	args := os.Args
