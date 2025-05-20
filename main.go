@@ -21,14 +21,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dbQueries := database.New(db)
 
-	s := state{db: dbQueries, config: &cfg}
+	s := state{db: database.New(db), config: &cfg}
 
 	cmds := newCommands()
 	cmds.register("register", handlerRegister)
 	cmds.register("login", handlerLogin)
 	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerListUsers)
 
 	args := os.Args
 	if len(args) < 2 {
