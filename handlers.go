@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nordluma/gator/internal/database"
+	"github.com/nordluma/gator/internal/rss"
 )
 
 func handlerLogin(s *state, cmd command) error {
@@ -75,6 +76,18 @@ func handlerListUsers(s *state, cmd command) error {
 			fmt.Printf("* %s\n", user.Name)
 		}
 	}
+
+	return nil
+}
+
+func handlerFetchFeed(_ *state, cmd command) error {
+	feedUrl := "https://www.wagslane.dev/index.xml"
+	feed, err := rss.FetchFeed(context.Background(), feedUrl)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
 
 	return nil
 }
