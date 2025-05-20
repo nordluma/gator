@@ -5,16 +5,20 @@ import (
 	"encoding/xml"
 	"html"
 	"net/http"
+	"time"
 )
 
 func FetchFeed(ctx context.Context, feedUrl string) (*Feed, error) {
+	client := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", feedUrl, nil)
 	if err != nil {
 		return &Feed{}, err
 	}
 	req.Header.Set("User-Agent", "gator")
 
-	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
 		return &Feed{}, err
