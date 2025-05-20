@@ -31,12 +31,12 @@ func FetchFeed(ctx context.Context, feedUrl string) (*Feed, error) {
 		return &Feed{}, err
 	}
 
-	feed = escapeHtml(feed)
+	escapeHtml(&feed)
 
 	return &feed, nil
 }
 
-func escapeHtml(feed Feed) Feed {
+func escapeHtml(feed *Feed) {
 	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
 	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
 
@@ -44,6 +44,4 @@ func escapeHtml(feed Feed) Feed {
 		feed.Channel.Item[i].Title = html.UnescapeString(item.Title)
 		feed.Channel.Item[i].Description = html.UnescapeString(item.Description)
 	}
-
-	return feed
 }
