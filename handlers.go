@@ -140,3 +140,31 @@ func handlerListFeeds(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerFeedFollow(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return errors.New("the `feed` handler expects a single argument, the url of the feed to follow")
+	}
+	currentUser, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	feedToFollow, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
+	if err != nil {
+		return err
+	}
+
+	followedFeed, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:     uuid.New(),
+		UserID: currentUser.ID,
+		FeedID: feedToFollow.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Followed %s\n", followedFeed.FeedName)
+
+	return nil
+}
