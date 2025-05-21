@@ -91,3 +91,34 @@ func handlerFetchFeed(_ *state, cmd command) error {
 
 	return nil
 }
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return errors.New("the `addfeed` handler expects two arguments, feed name and url")
+	}
+
+	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	feedName := cmd.args[0]
+	url := cmd.args[1]
+
+	now := time.Now()
+	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		Name:      feedName,
+		Url:       url,
+		UserID:    user.ID,
+	})
+	if err != nil {
+		return nil
+	}
+
+	fmt.Println(feed)
+
+	return nil
+}
