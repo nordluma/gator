@@ -177,3 +177,21 @@ func handlerFeedFollow(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerFollowing(s *state, cmd command) error {
+	currentUser, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	followedFeeds, err := s.db.GetFeedFollowsForUser(context.Background(), currentUser.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, feed := range followedFeeds {
+		fmt.Printf("%s\n", feed)
+	}
+
+	return nil
+}
