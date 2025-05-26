@@ -80,14 +80,44 @@ func handlerListUsers(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFetchFeed(_ *state, cmd command) error {
-	feedUrl := "https://www.wagslane.dev/index.xml"
-	feed, err := rss.FetchFeed(context.Background(), feedUrl)
+func handlerFetchFeed(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return errors.New(
+			"the `agg` handler expects a single argument, the duration between intervals",
+		)
+	}
+
+	interval, err := time.ParseDuration(cmd.args[0])
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Feed: %v\n", feed)
+	fmt.Printf("Collecting feeds every %s\n", interval)
+	ticker := time.NewTicker(interval)
+	for ; ; <-ticker.C {
+		if err := scrapeFeeds(s); err != nil {
+			return err
+		}
+	}
+}
+
+func scrapeFeeds(s *state) error {
+	feedToFetch, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return err
+	}
+
+	feed, err := rss.FetchFeed(context.Background(), feedToFetch.Url)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range feed.Channel.Item {
+		fmt.Printf("Title: %s\n", item.Title)
+		fmt.Printf("\t- Pub Date: %s\n", item.PubDate)
+		fmt.Printf("\t- Link: %s\n", item.Link)
+		fmt.Printf("\t- Description: %s\n", item.Description)
+	}
 
 	return nil
 }
@@ -147,7 +177,9 @@ func handlerListFeeds(s *state, cmd command) error {
 
 func handlerFeedFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) == 0 {
-		return errors.New("the `feed` handler expects a single argument, the url of the feed to follow")
+		return errors.New(
+			"the `feed` handler expects a single argument, the url of the feed to follow",
+		)
 	}
 
 	feedToFollow, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
@@ -155,11 +187,14 @@ func handlerFeedFollow(s *state, cmd command, user database.User) error {
 		return err
 	}
 
-	followedFeed, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
-		ID:     uuid.New(),
-		UserID: user.ID,
-		FeedID: feedToFollow.ID,
-	})
+	followedFeed, err := s.db.CreateFeedFollow(
+		context.Background(),
+		database.CreateFeedFollowParams{
+			ID:     uuid.New(),
+			UserID: user.ID,
+			FeedID: feedToFollow.ID,
+		},
+	)
 	if err != nil {
 		return err
 	}
@@ -184,14 +219,21 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 
 func handlerUnfollowFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) == 0 {
-		return errors.New("the `unfollow` handler expects a single argument, the url of the feed to unfollow")
+		return errors.New(
+			"the `unfollow` handler expects a single argument, the url of the feed to unfollow",
+		)
 	}
 	feed, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
 	if err != nil {
 		return nil
 	}
 
-	if err = s.db.DeleteFeedFollowForUser(context.Background(), database.DeleteFeedFollowForUserParams{UserID: user.ID, FeedID: feed.ID}); err != nil {
+	if err = s.db.DeleteFeedFollowForUser(
+		context.Background(),
+		database.DeleteFeedFollowForUserParams{
+			UserID: user.ID,
+			FeedID: feed.ID,
+		}); err != nil {
 		return nil
 	}
 
